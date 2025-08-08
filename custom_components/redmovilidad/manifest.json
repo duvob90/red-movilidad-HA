@@ -1,0 +1,11 @@
+{
+  "domain": "redmovilidad",
+  "name": "Integración Red Movilidad",
+  "version": "1.0.0",
+  "config_flow": true,
+  "documentation": "https://github.com/tu_usuario/integracion-red-movilidad-home-assistant",
+  "requirements": [],
+  "codeowners": ["@tu_usuario"],
+  "iot_class": "cloud_polling",
+  "integration_type": "service"
+}
