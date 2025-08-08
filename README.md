@@ -69,20 +69,21 @@ content: >-
 
 ```yaml
 type: custom:mushroom-template-card
-primary: Paradero PD94
 icon: mdi:bus
-icon_color: red
-entity: sensor.paradero_pd94
-secondary: >-
-  {% set buses = state_attr('sensor.paradero_pd94', 'next_buses') %}
-  {% if buses %}
-    🚌 **{{ buses[0].route_id }}** llega {{ buses[0].arrival_estimation|lower }}.
-    {% if buses|length > 1 %}
-      Próx: {{ buses[1].route_id }} en {{ buses[1].arrival_estimation|lower }}.
+icon_color: green
+layout: vertical
+entity: sensor.paradero_pd94 // Debes cambiar esto por el codigo de paradero que configuraste en la UI al añadir la integración
+primary: |
+  {{ state_attr('sensor.paradero_pd94', 'friendly_name') }}
+multiline_secondary: true
+secondary: >
+  {% set buses = state_attr('sensor.paradero_pd94', 'next_buses') %} {% set ns = // Debes cambiar esto por el codigo de paradero que configuraste en la UI al añadir la integración
+  namespace(vistos=[], out='') %} {% for bus in buses %} 
+    {% if bus.route_id not in ns.vistos %}
+      {% set ns.out = ns.out + (bus.route_id ~ " - " ~ bus.arrival_estimation ~ "\n") %}
+      {% set ns.vistos = ns.vistos + [bus.route_id] %}
     {% endif %}
-  {% else %}
-    No hay buses próximos.
-  {% endif %}
+  {% endfor %} {{ ns.out }}
 ```
 
 ---
