@@ -72,18 +72,43 @@ type: custom:mushroom-template-card
 icon: mdi:bus
 icon_color: green
 layout: vertical
-entity: sensor.paradero_pd94 // Debes cambiar esto por el codigo de paradero que configuraste en la UI al añadir la integración
+entity: sensor.paradero_pd94
 primary: |
   {{ state_attr('sensor.paradero_pd94', 'friendly_name') }}
 multiline_secondary: true
 secondary: >
-  {% set buses = state_attr('sensor.paradero_pd94', 'next_buses') %} {% set ns = // Debes cambiar esto por el codigo de paradero que configuraste en la UI al añadir la integración
-  namespace(vistos=[], out='') %} {% for bus in buses %} 
+  {% set buses = state_attr('sensor.paradero_pd94', 'next_buses') %} {% set ns =
+  namespace(vistos=[], ordenados=[]) %}
+
+  {# Convertimos cada estimación a minutos y guardamos con el route_id #} {% for
+  bus in buses %}
+    {% set txt = bus.arrival_estimation %}
+    {% set mins = 999 %}
+    {% if 'Llegando' in txt %}
+      {% set mins = 0 %}
+    {% elif 'Menos de' in txt %}
+      {% set mins = (txt.split('Menos de')[1].split('min')[0] | int) - 1 %}
+    {% elif 'Entre' in txt %}
+      {% set mins = txt.split('Entre')[1].split('Y')[0] | int %}
+    {% elif 'Mas de' in txt %}
+      {% set mins = txt.split('Mas de')[1].split('min')[0] | int + 1 %}
+    {% endif %}
+    {% set ns.ordenados = ns.ordenados + [ {'route_id': bus.route_id, 'arrival': txt, 'mins': mins} ] %}
+  {% endfor %}
+
+  {# Ordenamos por minutos #} {% set orden_final = ns.ordenados |
+  sort(attribute='mins') %}
+
+  {# Mostramos una línea por cada servicio (sin repetir) #} {% set salida =
+  namespace(txt='') %} {% for bus in orden_final %}
     {% if bus.route_id not in ns.vistos %}
-      {% set ns.out = ns.out + (bus.route_id ~ " - " ~ bus.arrival_estimation ~ "\n") %}
+      {% set salida.txt = salida.txt ~ bus.route_id ~ " - " ~ bus.arrival ~ "\n" %}
       {% set ns.vistos = ns.vistos + [bus.route_id] %}
     {% endif %}
-  {% endfor %} {{ ns.out }}
+  {% endfor %}
+
+  {{ salida.txt }}
+
 ```
 
 ---
@@ -92,6 +117,7 @@ secondary: >
 
 Basado en la API no oficial de Red Movilidad:  
 https://github.com/muZk/red-api
+Creado por Dubov90
 
 ---
 
